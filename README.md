@@ -35,7 +35,7 @@ Advised to use NetBeans, as no Makefile will be provided!
 
 **Select from various optimizations**
 
-![OptimizationPanel](screenshots/OptimizationsPanel.png)
+![OptimizationPanel](screenshots/OptimizationPanel.png)
 
 **See Before-And-After Transformations!**
 
