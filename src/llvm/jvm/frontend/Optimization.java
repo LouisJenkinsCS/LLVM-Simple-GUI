@@ -38,8 +38,11 @@ public class Optimization {
     }
 
     public void setSelected(boolean selected) {
+        if (this.selected == selected) return;
         this.selected = selected;
-        this.timeSelected = Instant.now();
+        if (selected)
+            this.timeSelected = Instant.now();
+        else this.timeSelected = null;
     }
 
     public String getName() {

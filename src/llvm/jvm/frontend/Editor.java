@@ -60,7 +60,7 @@ import org.json.simple.parser.ParseException;
 public class Editor extends javax.swing.JFrame {
     
     private int graphType = CFG;
-    private static final int CFG = 0, DOM = 1, POSTDOM = 2;
+    private static final int CFG = 0, CFG_ONLY = 1, DOM = 2, DOM_ONLY = 3,  POSTDOM = 4, POSTDOM_ONLY = 5;
 
     private static String LLVM_JVM_PATH = "/home/awsgui/LLVM-JVM/";
     
@@ -102,9 +102,9 @@ public class Editor extends javax.swing.JFrame {
             });
             OptimizationsPanel.add(new JScrollPane(cblist), BorderLayout.CENTER);
                     
-            editor = new RSyntaxTextArea(20, 60);
+            editor = new RSyntaxTextArea(20, 40);
             editor.setFont(new Font("Arial", Font.PLAIN, 20));
-            editor.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_JAVA);
+            editor.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_C);
             editor.setCodeFoldingEnabled(true);
             editor.setText(defaultContents);
             RTextScrollPane sp = new RTextScrollPane(editor);
@@ -131,11 +131,19 @@ public class Editor extends javax.swing.JFrame {
 
     private void generateLLVMGraph(int... optimizations) throws IOException, InterruptedException {
         ArrayList<String> args = new ArrayList<>();
-        String graphTypeString = graphType == CFG ? "cfg" : graphType == DOM ? "dom" : "postdom";
+        String graphTypeString = 
+                graphType == CFG ? "cfg" 
+                : graphType == CFG_ONLY ? "cfg-only" 
+                : graphType == DOM ? "dom" 
+                : graphType == DOM_ONLY ? "dom-only"
+                : graphType == POSTDOM ? "postdom"
+                : "postdom-only";
         args.add("opt");
         args.add(dir + "/unoptimized.bc");
         args.add("-instnamer");
         
+        
+        OptimizationManager.reset();
         // Remove any unselected JCheckBox's, as unselection is not triggered
         // by the ListSelectionListener event.
         for(int i = 0; i < model.size(); i++) {
@@ -212,7 +220,6 @@ public class Editor extends javax.swing.JFrame {
                 throw new IOException(new String(Files.readAllBytes(errFile.toPath())));
             }
             generateLLVMGraph(0);
-            Toast.makeText(this, "Finished!", Toast.Style.SUCCESS).display();
         } catch (Exception ex) {
             Toast.makeText(this, ex.getMessage(), Toast.LENGTH_LONG, Toast.Style.ERROR).display();
             Logger.getLogger(Editor.class.getName()).log(Level.SEVERE, null, ex);
@@ -235,14 +242,24 @@ public class Editor extends javax.swing.JFrame {
 
         jSeparator1 = new javax.swing.JSeparator();
         buttonGroup1 = new javax.swing.ButtonGroup();
+        jMenuItem2 = new javax.swing.JMenuItem();
+        jMenuItem1 = new javax.swing.JMenuItem();
         TextEditorPanel = new javax.swing.JPanel();
         jTabbedPane1 = new javax.swing.JTabbedPane();
         OutputUnoptimizedIR = new javax.swing.JPanel();
         OptimizationsPanel = new javax.swing.JPanel();
         jMenuBar1 = new javax.swing.JMenuBar();
         jMenu1 = new javax.swing.JMenu();
-        jMenu2 = new javax.swing.JMenu();
-        jMenu3 = new javax.swing.JMenu();
+        jMenuItemCFG = new javax.swing.JMenuItem();
+        jMenuItemCFGOnly = new javax.swing.JMenuItem();
+        jMenuItemDOM = new javax.swing.JMenuItem();
+        jMenuItemDOMONLY = new javax.swing.JMenuItem();
+        jMenuItemPOSTDOM = new javax.swing.JMenuItem();
+        jMenuItemPOSTDOMONLY = new javax.swing.JMenuItem();
+
+        jMenuItem2.setText("jMenuItem2");
+
+        jMenuItem1.setText("jMenuItem1");
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setBackground(new java.awt.Color(0, 0, 0));
@@ -255,29 +272,60 @@ public class Editor extends javax.swing.JFrame {
         OptimizationsPanel.setLayout(new java.awt.BorderLayout());
         jTabbedPane1.addTab("Optimizations", OptimizationsPanel);
 
-        jMenu1.setText("Run (CFG)");
-        jMenu1.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mousePressed(java.awt.event.MouseEvent evt) {
-                jMenu1MousePressed(evt);
+        jMenu1.setText("Run...");
+
+        jMenuItemCFG.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_C, java.awt.event.InputEvent.SHIFT_MASK | java.awt.event.InputEvent.CTRL_MASK));
+        jMenuItemCFG.setText("CFG");
+        jMenuItemCFG.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemCFGActionPerformed(evt);
             }
         });
+        jMenu1.add(jMenuItemCFG);
+
+        jMenuItemCFGOnly.setText("CFG (Headers)");
+        jMenuItemCFGOnly.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemCFGOnlyActionPerformed(evt);
+            }
+        });
+        jMenu1.add(jMenuItemCFGOnly);
+
+        jMenuItemDOM.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_D, java.awt.event.InputEvent.SHIFT_MASK | java.awt.event.InputEvent.CTRL_MASK));
+        jMenuItemDOM.setText("DOM");
+        jMenuItemDOM.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemDOMActionPerformed(evt);
+            }
+        });
+        jMenu1.add(jMenuItemDOM);
+
+        jMenuItemDOMONLY.setText("DOM (Headers)");
+        jMenuItemDOMONLY.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemDOMONLYActionPerformed(evt);
+            }
+        });
+        jMenu1.add(jMenuItemDOMONLY);
+
+        jMenuItemPOSTDOM.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_P, java.awt.event.InputEvent.SHIFT_MASK | java.awt.event.InputEvent.CTRL_MASK));
+        jMenuItemPOSTDOM.setText("POSTDOM");
+        jMenuItemPOSTDOM.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemPOSTDOMActionPerformed(evt);
+            }
+        });
+        jMenu1.add(jMenuItemPOSTDOM);
+
+        jMenuItemPOSTDOMONLY.setText("POSTDOM (Headers)");
+        jMenuItemPOSTDOMONLY.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemPOSTDOMONLYActionPerformed(evt);
+            }
+        });
+        jMenu1.add(jMenuItemPOSTDOMONLY);
+
         jMenuBar1.add(jMenu1);
-
-        jMenu2.setText("Run (Dom)");
-        jMenu2.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mousePressed(java.awt.event.MouseEvent evt) {
-                jMenu2MousePressed(evt);
-            }
-        });
-        jMenuBar1.add(jMenu2);
-
-        jMenu3.setText("Run (PostDom)");
-        jMenu3.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mousePressed(java.awt.event.MouseEvent evt) {
-                jMenu3MousePressed(evt);
-            }
-        });
-        jMenuBar1.add(jMenu3);
 
         setJMenuBar(jMenuBar1);
 
@@ -299,20 +347,35 @@ public class Editor extends javax.swing.JFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void jMenu2MousePressed(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jMenu2MousePressed
-        graphType = DOM;
-        handleClick();
-    }//GEN-LAST:event_jMenu2MousePressed
-
-    private void jMenu1MousePressed(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jMenu1MousePressed
+    private void jMenuItemCFGActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemCFGActionPerformed
         graphType = CFG;
         handleClick();
-    }//GEN-LAST:event_jMenu1MousePressed
+    }//GEN-LAST:event_jMenuItemCFGActionPerformed
 
-    private void jMenu3MousePressed(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jMenu3MousePressed
+    private void jMenuItemCFGOnlyActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemCFGOnlyActionPerformed
+        graphType = CFG_ONLY;
+        handleClick();
+    }//GEN-LAST:event_jMenuItemCFGOnlyActionPerformed
+
+    private void jMenuItemDOMActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemDOMActionPerformed
+        graphType = DOM;
+        handleClick();
+    }//GEN-LAST:event_jMenuItemDOMActionPerformed
+
+    private void jMenuItemDOMONLYActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemDOMONLYActionPerformed
+        graphType = DOM_ONLY;
+        handleClick();
+    }//GEN-LAST:event_jMenuItemDOMONLYActionPerformed
+
+    private void jMenuItemPOSTDOMActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemPOSTDOMActionPerformed
         graphType = POSTDOM;
         handleClick();
-    }//GEN-LAST:event_jMenu3MousePressed
+    }//GEN-LAST:event_jMenuItemPOSTDOMActionPerformed
+
+    private void jMenuItemPOSTDOMONLYActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemPOSTDOMONLYActionPerformed
+        graphType = POSTDOM_ONLY;
+        handleClick();
+    }//GEN-LAST:event_jMenuItemPOSTDOMONLYActionPerformed
 
     /**
      * @param args the command line arguments
@@ -361,6 +424,8 @@ public class Editor extends javax.swing.JFrame {
                         break;
                     }
                 }
+                editor.handleClick();
+
                 editor.setVisible(true);
             }
         });
@@ -372,9 +437,15 @@ public class Editor extends javax.swing.JFrame {
     private javax.swing.JPanel TextEditorPanel;
     private javax.swing.ButtonGroup buttonGroup1;
     private javax.swing.JMenu jMenu1;
-    private javax.swing.JMenu jMenu2;
-    private javax.swing.JMenu jMenu3;
     private javax.swing.JMenuBar jMenuBar1;
+    private javax.swing.JMenuItem jMenuItem1;
+    private javax.swing.JMenuItem jMenuItem2;
+    private javax.swing.JMenuItem jMenuItemCFG;
+    private javax.swing.JMenuItem jMenuItemCFGOnly;
+    private javax.swing.JMenuItem jMenuItemDOM;
+    private javax.swing.JMenuItem jMenuItemDOMONLY;
+    private javax.swing.JMenuItem jMenuItemPOSTDOM;
+    private javax.swing.JMenuItem jMenuItemPOSTDOMONLY;
     private javax.swing.JSeparator jSeparator1;
     private javax.swing.JTabbedPane jTabbedPane1;
     // End of variables declaration//GEN-END:variables
