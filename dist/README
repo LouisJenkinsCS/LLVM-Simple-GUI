@@ -1,0 +1,5 @@
+Build:
+
+"java -jar LLVM-Simple-GUI.jar [filename]"
+
+'filename' argument is used to pass in a C file.

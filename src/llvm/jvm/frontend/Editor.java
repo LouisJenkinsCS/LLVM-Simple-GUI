@@ -134,6 +134,7 @@ public class Editor extends javax.swing.JFrame {
         String graphTypeString = graphType == CFG ? "cfg" : graphType == DOM ? "dom" : "postdom";
         args.add("opt");
         args.add(dir + "/unoptimized.bc");
+        args.add("-instnamer");
         
         // Remove any unselected JCheckBox's, as unselection is not triggered
         // by the ListSelectionListener event.
@@ -201,7 +202,7 @@ public class Editor extends javax.swing.JFrame {
             String filePath = tmpFile.getAbsolutePath();
             System.out.println("File Path: " + filePath);
             int retval = new ProcessBuilder()
-                    .command("clang", "-fno-show-source-location", "-O0", "-S", "-emit-llvm", "-Xclang", "-disable-O0-optnone", "-o", "unoptimized.bc", filePath)
+                    .command("clang", "-fno-discard-value-names", "-fno-show-source-location", "-O0", "-S", "-emit-llvm", "-Xclang", "-disable-O0-optnone", "-o", "unoptimized.bc", filePath)
                     .directory(dir)
                     .redirectOutput(outFile)
                     .redirectError(errFile)
